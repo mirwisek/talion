@@ -18,7 +18,7 @@ tokenizer = None
 model = None
 
 
-@app.get("/health", 200)
+@app.get("/health")
 async def health():
     return {"status": "ok"}
 
