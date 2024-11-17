@@ -5,19 +5,35 @@ import torch
 
 app = FastAPI()
 
+is_model = False
+
+
+
 MODEL_NAME = "Equall/Saul-7B-Instruct-v1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-try:
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float16).to(device)
-    print('The model has been loaded successfully!')
-except Exception as e:
-    raise RuntimeError(f"Error loading model: {e}")
+tokenizer = None
+model = None
+
+
+@app.get("/health", 200)
+async def health():
+    return {"status": "ok"}
 
 # Root endpoint with HTML response
 @app.get("/", response_class=HTMLResponse)
 async def root():
+    global tokenizer, model, is_model
+    if is_model:
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+            model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float16).to(device)
+            is_model = True
+        except Exception as e:
+            raise RuntimeError(f"Error loading model: {e}")
+
+    print('The model has been loaded successfully!')
+
     html_content = """
     <!DOCTYPE html>
     <html>
