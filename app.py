@@ -3,6 +3,11 @@ from fastapi.responses import HTMLResponse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import logging
+from pydantic import BaseModel
+
+class GenerateRequest(BaseModel):
+    prompt: str
+    max_length: int = 100
 
 app = FastAPI()
 
@@ -26,7 +31,7 @@ async def health():
 @app.get("/", response_class=HTMLResponse)
 async def root():
     global tokenizer, model, is_model
-    if is_model:
+    if not is_model:
         try:
             tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
             model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float16).to(device)
@@ -51,11 +56,14 @@ async def root():
     """
     return HTMLResponse(content=html_content)
 
+
+
+
 @app.post("/generate/")
-async def generate_text(prompt: str, max_length: int = 100):
+async def generate_text(request: GenerateRequest):
     try:
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
-        outputs = model.generate(inputs.input_ids, max_length=max_length)
+        inputs = tokenizer(request.prompt, return_tensors="pt").to(device)
+        outputs = model.generate(inputs.input_ids, max_length=request.max_length)
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         return {"generated_text": response}
     except Exception as e:
