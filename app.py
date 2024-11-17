@@ -2,12 +2,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
+import logging
 
 app = FastAPI()
 
 is_model = False
 
-
+torch.set_printoptions(profile="full")
+logging.basicConfig(level=logging.DEBUG)
 
 MODEL_NAME = "Equall/Saul-7B-Instruct-v1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
