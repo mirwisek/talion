@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
@@ -12,6 +13,24 @@ try:
     model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float16).to(device)
 except Exception as e:
     raise RuntimeError(f"Error loading model: {e}")
+
+# Root endpoint with HTML response
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>App Status</title>
+    </head>
+    <body>
+        <h1>Talion is Running</h1>
+        <p>Welcome to the Saul-7B-Instruct API!</p>
+        <p>Use the <code>/generate</code> endpoint to interact with the model.</p>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
 @app.post("/generate/")
 async def generate_text(prompt: str, max_length: int = 100):
